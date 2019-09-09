@@ -20,9 +20,11 @@ import android.app.ActivityManager;
 import android.app.ActivityManager.MemoryInfo;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -39,6 +41,7 @@ public class MemoryTestFragment extends BaseTestFragment {
     private TextView mFreeMemoryTv;
     private TextView mTotalMemoryTv;
     private Spinner mFillPercentSpinner;
+    private static final String TAG = "Stress_Mem";
 
     private int mFreeMemory;
     private int mUsedMemory;
@@ -76,29 +79,35 @@ public class MemoryTestFragment extends BaseTestFragment {
     }
 
 
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        mCountDown = 30;
+    private void startTimer() {
+        if (mTimer != null) {
+            Log.e(TAG, "mTimer is not null. return");
+            return;
+        }
         mTimer = new Timer();
         mTimer.schedule(new TimerTask() {
             @Override
             public void run() {
+                Log.e(TAG, "run(). ruuing = " + isRunning());
                 update();
 
                 if (isRunning()) {
+                    Log.e(TAG, "mUsedMemory = " + mUsedMemory);
+                    Log.e(TAG, "mTotalMemory = " + mTotalMemory);
+                    Log.e(TAG, "mFillPercent = " + mFillPercent);
                     if ((mUsedMemory*100)/mTotalMemory < mFillPercent) {
-                        MemOpUtils.malloc(10);
+                        MemOpUtils.malloc(40);
+                        Log.e(TAG, "malloc");
                     } else {
-                        if (mCountDown > 0) {
-                            mCountDown--;
-                        } else {
-                            if (mTimer != null) {
-                                mTimer.cancel();
-                                mTimer = null;
-                            }
+                        Log.e(TAG, "malloc. " + (mUsedMemory*100)/mTotalMemory);
+                        //if (mCountDown > 0) {
+                        //      mCountDown--;
+                        // } else {
+                        if (mTimer != null) {
+                            mTimer.cancel();
+                            mTimer = null;
                         }
+                        //   }
                     }
                 }
             }
@@ -106,9 +115,17 @@ public class MemoryTestFragment extends BaseTestFragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        Log.e(TAG, "onStart()");
+        startTimer();
+
+    }
+
+    @Override
     public void onStop() {
         super.onStop();
-
+        Log.e(TAG, "onStop()");
         if (mTimer != null) {
             mTimer.cancel();
             mTimer = null;
@@ -123,14 +140,19 @@ public class MemoryTestFragment extends BaseTestFragment {
         mFillPercentSpinner.setSelection(2); // 默认80%
     }
 
+
     @Override
     protected void updateImpl() {
         super.updateImpl();
 
         MemoryInfo systemMemInfo = new MemoryInfo();
         mAm.getMemoryInfo(systemMemInfo);
-        mFreeMemory = (int) systemMemInfo.availMem/1024/1024;
-        mTotalMemory = (int) systemMemInfo.totalMem/1024/1024;
+        mFreeMemory = (int) (systemMemInfo.availMem/1024/1024);
+        mTotalMemory = (int) (systemMemInfo.totalMem/1024/1024);
+        //Log.e(TAG, "availMem = " + systemMemInfo.availMem);
+        //Log.e(TAG, "totalMem = " + systemMemInfo.totalMem);
+        //Log.e(TAG, "mFreeMemory = " + mFreeMemory);
+        //Log.e(TAG, "mTotalMemory = " + mTotalMemory);
         mUsedMemory = mTotalMemory - mFreeMemory;
         int progress = (mUsedMemory*100)/mTotalMemory;
         mArcProgress.setProgress(progress);
@@ -149,12 +171,12 @@ public class MemoryTestFragment extends BaseTestFragment {
     public void start() {
         mFillPercent = sMemoryFillPercentList[mFillPercentSpinner.getSelectedItemPosition()];
         super.start();
+        startTimer();
     }
 
     @Override
     public void stop() {
         MemOpUtils.free();
-
         super.stop();
     }
 }

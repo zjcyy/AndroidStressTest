@@ -361,7 +361,13 @@ public class BaseTestFragment extends Fragment {
         if (mCountTimer != null) {
             mCountTimer.cancel();
         }
-        update();
+        int delay = (mType == TestType.TYPE_MEMORY_TEST) ? 2000 : 0;
+        mHandler.postAtTime(new Runnable() {
+            @Override
+            public void run() {
+                update();
+            }
+        }, delay);
     }
 
     protected void IncCurrentCount() {
