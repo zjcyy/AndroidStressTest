@@ -1,5 +1,5 @@
 /*
- * Copyright(c) 2018 Habo Shen <ayst.shen@foxmail.com>
+ * Copyright(c) 2018 Bob Shen <ayst.shen@foxmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.ayst.stresstest.R;
-
-import org.w3c.dom.Text;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -208,10 +206,8 @@ public class SleepTestFragment extends BaseTestFragment {
             }
             mPowerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.FULL_WAKE_LOCK, "ScreenOnTimer").acquire(mWakeTime);
 
-            IncCurrentCount();
+            incCurrentCount();
             if (mMaxTestCount != 0 && mCurrentCount >= mMaxTestCount) {
-                Log.d(TAG, "run, Sleep test finish!");
-                mResult = RESULT_SUCCESS;
                 stop();
             } else {
                 setAlarm(mActivity, mWakeTime+mSleepTime, false);

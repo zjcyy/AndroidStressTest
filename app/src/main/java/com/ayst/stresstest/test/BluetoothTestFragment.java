@@ -1,5 +1,5 @@
 /*
- * Copyright(c) 2018 Habo Shen <ayst.shen@foxmail.com>
+ * Copyright(c) 2018 Bob Shen <ayst.shen@foxmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,7 +63,6 @@ public class BluetoothTestFragment extends BaseTestFragment {
     private CheckBox mCheckConnectCheckbox;
     private CheckBox mBleCheckbox;
 
-    private int mConnectCount;
     private boolean isCheckConnect = false;
     private boolean mScanning = true;
     private DeviceListAdapter mDeviceListAdapter = null;
@@ -91,12 +90,11 @@ public class BluetoothTestFragment extends BaseTestFragment {
         setCountType(COUNT_TYPE_COUNT);
         setType(TestType.TYPE_BT_TEST);
 
-        initView(contentView);
-
         return view;
     }
 
-    private void initView(View view) {
+    @Override
+    public void onViewCreated(final View view, Bundle savedInstanceState) {
         mSettingsContainer = (LinearLayout) view.findViewById(R.id.container_settings);
         mRunningContainer = (FrameLayout) view.findViewById(R.id.container_running);
         mSpinKitView = (SpinKitView) view.findViewById(R.id.spin_kit);
@@ -113,6 +111,10 @@ public class BluetoothTestFragment extends BaseTestFragment {
                 }
             }
         });
+
+        if (null == mBluetoothAdapter) {
+            setEnable(false);
+        }
     }
 
     @Override
@@ -136,7 +138,6 @@ public class BluetoothTestFragment extends BaseTestFragment {
             public void run() {
                 if (!isRunning() || (mMaxTestCount != 0 && mCurrentCount >= mMaxTestCount)) {
                     Log.d(TAG, "run, Bluetooth test finish!");
-                    mResult = RESULT_SUCCESS;
                     if (mBluetoothAdapter.getState() == mBluetoothAdapter.STATE_OFF) {
                         mBluetoothAdapter.enable();
                     }
@@ -148,19 +149,13 @@ public class BluetoothTestFragment extends BaseTestFragment {
                     } else if (mBluetoothAdapter.isEnabled()) {
                         if (isCheckConnect) {
                             if (!(mData.size() > 0)) {
-                                if (++mConnectCount > 2) {
-                                    mResult = RESULT_FAIL;
-                                    stop();
-                                    return;
-                                }
-                            } else {
-                                mConnectCount = 0;
+                                incFailureCount();
                             }
                         }
 
                         mBluetoothAdapter.disable();
                         Log.d(TAG, "run, Bluetooth is opened, try close Bluetooth now!");
-                        IncCurrentCount();
+                        incCurrentCount();
                     }
                     mHandler.sendEmptyMessage(MSG_UPDATE);
                 }

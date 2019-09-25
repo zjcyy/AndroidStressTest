@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ Copyright(c) 2018 Habo Shen <ayst.shen@foxmail.com>
+  ~ Copyright(c) 2018 Bob Shen <ayst.shen@foxmail.com>
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -42,10 +42,15 @@
     <string name="sleep_test">休眠测试</string>
     <string name="recovery_test">恢复出厂测试</string>
     <string name="timing_boot_test">定时开关机测试</string>
+    <string name="network_test">网络测试</string>
+    <string name="camera_test">摄像头测试</string>
+
+    <!--permission-->
+    <string name="request_permission">获取相机权限失败，该项测试将无法进行。</string>
 
     <!--Bluetooth Test-->
     <string name="bt_test_intro">蓝牙测试将持续打开、关闭、并扫描附近蓝牙设备，支持经典蓝牙和低功耗蓝牙，支持自动判别测试结果。</string>
-    <string name="bt_test_retry">连续3次不能搜索到任何蓝牙设备结束测试</string>
+    <string name="bt_test_check_connect">通过检查蓝牙连接判别测试结果</string>
     <string name="bt_test_ble">蓝牙4.0+</string>
     <string name="bt_test_valid_device_tips">请确定附近至少能搜索到一个有效的蓝牙设备！</string>
     <string name="bt_test_bt_opening">蓝牙打开中</string>
@@ -70,7 +75,7 @@
 
     <!--WiFi Test-->
     <string name="wifi_test_intro">WiFi测试将持续打开、关闭、并扫描附近WiFi热点，支持自动判别测试结果。</string>
-    <string name="wifi_test_retry">连续3次连接失败结束测试</string>
+    <string name="wifi_test_check_connect">通过检查WiFi连接判别测试结果</string>
     <string name="wifi_test_connect_tips">请先到系统设置打开并连接一个有效的WIFI热点！</string>
     <string name="wifi_test_connected">已连接</string>
     <string name="wifi_test_connecting">连接中</string>
@@ -132,5 +137,17 @@
     <string name="timing_boot_test_shutdown_tips">确定要定时开关机测试吗？确定后将在 %d 秒后关机。</string>
     <string name="timing_boot_test_set_shutdown_delay_tips">请设置关机时间！</string>
     <string name="timing_boot_test_set_startup_delay_tips">请设置开机时间！</string>
+
+    <!--Network Test-->
+    <string name="network_test_intro">网络测试将反复 ping 指定的网址，记录失败次数。</string>
+    <string name="network_test_url_empty_tips">请设置测试网址！</string>
+    <string name="network_test_url">测试网址：</string>
+    <string name="network_test_retry_count">重试次数：</string>
+    <string name="network_test_failure_count">失败计数：</string>
+
+    <!--Camera Test-->
+    <string name="camera_test_intro">摄像头测试将反复打开摄像头进行预览并拍照，记录失败次数。</string>
+    <string name="camera_test_select_camera">被测摄像头：</string>
+    <string name="camera_test_failure_count">失败计数：</string>
 
 </resources>

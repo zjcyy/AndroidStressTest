@@ -13,6 +13,7 @@ This is an Android system stress test app that verifies the reliability of the m
 * Restart test
 * Sleep test
 * Restore factory test
+* Time power-on/off test
 
 ## Preview
 ![image](screenshots/device-2018-08-09-175845.png)

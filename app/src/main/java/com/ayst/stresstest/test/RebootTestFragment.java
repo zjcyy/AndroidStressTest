@@ -1,5 +1,5 @@
 /*
- * Copyright(c) 2018 Habo Shen <ayst.shen@foxmail.com>
+ * Copyright(c) 2018 Bob Shen <ayst.shen@foxmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -156,7 +156,6 @@ public class RebootTestFragment extends BaseTestFragment {
 
             if (mMaxTestCount != 0 && mMaxTestCount <= mCurrentCount) {
                 Log.d(TAG, "run, Bluetooth test finish!");
-                mResult = RESULT_SUCCESS;
                 stop();
             } else {
                 mCountDownTime = mDelayTime; // DELAY_TIME/1000;
@@ -230,7 +229,7 @@ public class RebootTestFragment extends BaseTestFragment {
 
     private void reboot() {
         // save state
-        IncCurrentCount();
+        incCurrentCount();
         saveState();
 
         // 重启

@@ -1,5 +1,5 @@
 /*
- * Copyright(c) 2018 Habo Shen <ayst.shen@foxmail.com>
+ * Copyright(c) 2018 Bob Shen <ayst.shen@foxmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,25 @@
 
 package com.ayst.stresstest.test;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Color;
+import android.graphics.drawable.ClipDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
-import android.support.annotation.StringRes;
+
+import androidx.annotation.StringRes;
+
 import android.text.InputType;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,17 +45,14 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.orhanobut.logger.Logger;
 import com.ayst.stresstest.R;
 
+import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.Unbinder;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -66,24 +71,15 @@ public class BaseTestFragment extends Fragment {
 
     protected static final int MSG_UPDATE = 1;
 
-    @BindView(R.id.progressbar)
-    ProgressBar mProgressbar;
-    @BindView(R.id.tv_title)
-    TextView mTitleTv;
-    @BindView(R.id.tv_count)
-    TextView mCountTv;
-    @BindView(R.id.container_title)
-    FrameLayout mTitleContainer;
-    @BindView(R.id.container)
-    RelativeLayout mContentContainer;
-    @BindView(R.id.btn_start)
-    Button mStartBtn;
-    @BindView(R.id.iv_logo)
-    ImageView mLogoIv;
-    @BindView(R.id.container_full)
-    RelativeLayout mFullContainer;
-
-    Unbinder unbinder;
+    protected ProgressBar mProgressbar;
+    protected TextView mTitleTv;
+    protected TextView mCountTv;
+    protected TextView mFailureCountTv;
+    protected FrameLayout mTitleContainer;
+    protected RelativeLayout mContentContainer;
+    protected Button mStartBtn;
+    protected ImageView mLogoIv;
+    protected RelativeLayout mFullContainer;
 
     protected Activity mActivity;
 
@@ -93,11 +89,6 @@ public class BaseTestFragment extends Fragment {
     public static final int STATE_STOP = 2;
     protected int mState = STATE_STOP;
 
-    protected static final int RESULT_SUCCESS = 1;
-    protected static final int RESULT_FAIL = 2;
-    protected static final int RESULT_CANCEL = 3;
-    protected int mResult = RESULT_CANCEL;
-
     protected static final int COUNT_TYPE_COUNT = 1;
     protected static final int COUNT_TYPE_TIME = 2;
     protected static final int COUNT_TYPE_NONE = 3;
@@ -106,16 +97,33 @@ public class BaseTestFragment extends Fragment {
     protected int mMaxTestCount = 0;
     protected int mMaxTestTime = 0;
     protected int mCurrentCount = 0;
+    protected int mFailureCount = 0;
     protected int mCurrentTime = 0;
     private Timer mCountTimer;
 
+    protected int mFailThreshold = 1;
+    protected int mPoorThreshold = 3;
+
     private boolean isEnable = true;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
     protected OnFragmentInteractionListener mListener;
+
+    protected enum RESULT {
+        GOOD,
+        FAIL,
+        POOR,
+        CANCEL
+    }
+    protected RESULT mResult = RESULT.GOOD;
+    protected HashMap<RESULT, ClipDrawable> mResultDrawable = new HashMap<>();
+    protected static HashMap<RESULT, String> sResultStringMap = new HashMap<>();
+
+    static {
+        sResultStringMap.put(RESULT.GOOD, "GOOD");
+        sResultStringMap.put(RESULT.FAIL, "FAIL");
+        sResultStringMap.put(RESULT.POOR, "POOR");
+        sResultStringMap.put(RESULT.CANCEL, "CANCEL");
+    }
 
     public BaseTestFragment() {
         // Required empty public constructor
@@ -144,12 +152,12 @@ public class BaseTestFragment extends Fragment {
         super.onCreate(savedInstanceState);
         TAG = getClass().getSimpleName();
 
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-
         mActivity = this.getActivity();
+
+        mResultDrawable.put(RESULT.GOOD, new ClipDrawable(new ColorDrawable(Color.GREEN), Gravity.LEFT, ClipDrawable.HORIZONTAL));
+        mResultDrawable.put(RESULT.FAIL, new ClipDrawable(new ColorDrawable(Color.YELLOW), Gravity.LEFT, ClipDrawable.HORIZONTAL));
+        mResultDrawable.put(RESULT.POOR, new ClipDrawable(new ColorDrawable(Color.RED), Gravity.LEFT, ClipDrawable.HORIZONTAL));
+        mResultDrawable.put(RESULT.CANCEL, new ClipDrawable(new ColorDrawable(Color.GRAY), Gravity.LEFT, ClipDrawable.HORIZONTAL));
     }
 
     @Override
@@ -157,8 +165,27 @@ public class BaseTestFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_base_test, container, false);
-        unbinder = ButterKnife.bind(this, view);
+        initView(view);
         return view;
+    }
+
+    private void initView(View view) {
+        mProgressbar = (ProgressBar) view.findViewById(R.id.progressbar);
+        mTitleTv = (TextView) view.findViewById(R.id.tv_title);
+        mCountTv = (TextView) view.findViewById(R.id.tv_count);
+        mFailureCountTv = (TextView) view.findViewById(R.id.tv_failure_count);
+        mTitleContainer = (FrameLayout) view.findViewById(R.id.container_title);
+        mContentContainer = (RelativeLayout) view.findViewById(R.id.container);
+        mStartBtn = (Button) view.findViewById(R.id.btn_start);
+        mLogoIv = (ImageView) view.findViewById(R.id.iv_logo);
+        mFullContainer = (RelativeLayout) view.findViewById(R.id.container_full);
+
+        mStartBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onStartClicked();
+            }
+        });
     }
 
     @Override
@@ -199,7 +226,6 @@ public class BaseTestFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        unbinder.unbind();
 
         if (isRunning()) {
             stop();
@@ -207,12 +233,17 @@ public class BaseTestFragment extends Fragment {
     }
 
     protected void updateImpl() {
+        // Updating test count.
         if (mCountType == COUNT_TYPE_COUNT) {
             if (mMaxTestCount > 0) {
                 mCountTv.setText(mCurrentCount + "/" + mMaxTestCount);
                 mCountTv.setVisibility(View.VISIBLE);
+
+                mFailureCountTv.setText(mFailureCount + "/" + mCurrentCount);
+                mFailureCountTv.setVisibility(View.VISIBLE);
             } else {
                 mCountTv.setVisibility(View.GONE);
+                mFailureCountTv.setVisibility(View.GONE);
             }
         } else if (mCountType == COUNT_TYPE_TIME) {
             if (mMaxTestTime > 0) {
@@ -226,23 +257,27 @@ public class BaseTestFragment extends Fragment {
             }
         } else {
             mCountTv.setVisibility(View.GONE);
+            mFailureCountTv.setVisibility(View.GONE);
         }
 
+        // Updating progressbar.
+        mProgressbar.setVisibility(isEnable() ? View.VISIBLE : View.INVISIBLE);
+        if (isRunning()) {
+            if (mProgressbar.getProgressDrawable() != mResultDrawable.get(mResult)) {
+                mProgressbar.setProgressDrawable(mResultDrawable.get(mResult));
+            }
+            mProgressbar.setProgress((mCountType == COUNT_TYPE_COUNT) ? (mCurrentCount * 100) / mMaxTestCount : (mCurrentTime * 100) / (mMaxTestTime * 3600));
+        }
+
+        // Updating other.
+        mStartBtn.setEnabled(isEnable());
         if (isRunning()) {
             mStartBtn.setText(R.string.stop);
             mStartBtn.setSelected(true);
-            if (mCountType == COUNT_TYPE_NONE) {
-                mProgressbar.setVisibility(View.GONE);
-            } else {
-                mProgressbar.setProgress((mCountType == COUNT_TYPE_COUNT) ? (mCurrentCount * 100) / mMaxTestCount : (mCurrentTime * 100) / (mMaxTestTime * 3600));
-                mProgressbar.setVisibility(View.VISIBLE);
-            }
             mLogoIv.setVisibility(View.VISIBLE);
         } else {
             mStartBtn.setText(R.string.start);
             mStartBtn.setSelected(false);
-            mProgressbar.setVisibility(View.INVISIBLE);
-            updateTitleBg();
             mLogoIv.setVisibility(View.INVISIBLE);
         }
     }
@@ -251,8 +286,7 @@ public class BaseTestFragment extends Fragment {
         mHandler.sendEmptyMessage(MSG_UPDATE);
     }
 
-    @OnClick(R.id.btn_start)
-    public void onStartClicked() {
+    protected void onStartClicked() {
         if (isRunning()) {
             showStopDialog();
         } else {
@@ -261,18 +295,6 @@ public class BaseTestFragment extends Fragment {
             } else {
                 showSetMaxDialog();
             }
-        }
-    }
-
-    private void updateTitleBg() {
-        if (!isEnable()) {
-            mTitleContainer.setBackgroundColor(getResources().getColor(R.color.black_50));
-        } else if (mResult == RESULT_SUCCESS) {
-            mTitleContainer.setBackgroundColor(getResources().getColor(R.color.green));
-        } else if (mResult == RESULT_FAIL) {
-            mTitleContainer.setBackgroundColor(getResources().getColor(R.color.red));
-        } else {
-            mTitleContainer.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
         }
     }
 
@@ -300,12 +322,22 @@ public class BaseTestFragment extends Fragment {
         mType = type;
     }
 
+    protected void setThreshold(int fail, int poor) {
+        if (poor > fail) {
+            mFailThreshold = fail;
+            mPoorThreshold = poor;
+        } else {
+            Log.w(TAG, "setThreshold, Poor threshold must be greater than the Fail threshold.");
+        }
+    }
+
     public void start() {
-        Logger.t(TAG).d("Start %s", mCountType == COUNT_TYPE_COUNT ? mMaxTestCount : mMaxTestTime+"h");
+        Logger.t(TAG).d("Start %s", mCountType == COUNT_TYPE_COUNT ? mMaxTestCount : mMaxTestTime + "h");
 
         mState = STATE_RUNNING;
-        mResult = RESULT_CANCEL;
+        mResult = RESULT.GOOD;
         mCurrentCount = 0;
+        mFailureCount = 0;
         mCurrentTime = 0;
 
         if (mListener != null) {
@@ -324,7 +356,7 @@ public class BaseTestFragment extends Fragment {
                 public void run() {
                     if (!isRunning() || (mMaxTestTime != 0 && mCurrentTime >= mMaxTestTime * 3600)) {
                         Log.d(TAG, "CountTimer, " + TAG + " test finish!");
-                        mResult = RESULT_SUCCESS;
+                        mResult = RESULT.GOOD;
                         stop();
                     } else {
                         mCurrentTime++;
@@ -347,7 +379,7 @@ public class BaseTestFragment extends Fragment {
             int curSec = (mCurrentTime % 3600) % 60;
             message = curHour + ":" + curMin + ":" + curSec + "/" + mMaxTestTime + ":0:0";
         }
-        Logger.t(TAG).d("Stop %s %s", message, mResult==RESULT_SUCCESS?"SUCCESS":(mResult==RESULT_CANCEL?"CANCEL":"FAIL"));
+        Logger.t(TAG).d("Stop %s %s", message, sResultStringMap.get(mResult));
 
         mState = STATE_STOP;
         if (mListener != null) {
@@ -370,9 +402,20 @@ public class BaseTestFragment extends Fragment {
         }, delay);
     }
 
-    protected void IncCurrentCount() {
+    protected void incCurrentCount() {
         mCurrentCount++;
         Logger.t(TAG).d("Testing %d/%d", mCurrentCount, mMaxTestCount);
+    }
+
+    protected void incFailureCount() {
+        mFailureCount++;
+        if (mFailureCount >= mPoorThreshold) {
+            mResult = RESULT.POOR;
+        } else if (mFailureCount >= mFailThreshold) {
+            mResult = RESULT.FAIL;
+        } else {
+            mResult = RESULT.GOOD;
+        }
     }
 
     public boolean isRunning() {
@@ -381,14 +424,14 @@ public class BaseTestFragment extends Fragment {
 
     public void setEnable(boolean enable) {
         isEnable = enable;
-        mStartBtn.setEnabled(enable);
-        updateTitleBg();
+        update();
     }
 
     public boolean isEnable() {
         return isEnable;
     }
 
+    @SuppressLint("HandlerLeak")
     protected Handler mHandler = new Handler() {
         public void handleMessage(Message msg) {
             switch (msg.what) {
@@ -442,7 +485,7 @@ public class BaseTestFragment extends Fragment {
                 .setPositiveButton(R.string.stop, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        mResult = RESULT_CANCEL;
+                        mResult = RESULT.CANCEL;
                         stop();
                     }
                 })
@@ -453,6 +496,29 @@ public class BaseTestFragment extends Fragment {
                         dialog.cancel();
                     }
                 }).show();
+    }
+
+    /**
+     * A {@link Handler} for showing {@link Toast}s on the UI thread.
+     */
+    private final Handler mMessageHandler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message msg) {
+            Toast.makeText(mActivity, (String) msg.obj, Toast.LENGTH_SHORT).show();
+        }
+    };
+
+    /**
+     * Shows a {@link Toast} on the UI thread.
+     *
+     * @param text The message to show.
+     */
+    protected void showToast(String text) {
+        // We show a Toast by sending request message to mMessageHandler. This makes sure that the
+        // Toast is shown on the UI thread.
+        Message message = Message.obtain();
+        message.obj = text;
+        mMessageHandler.sendMessage(message);
     }
 
     /**

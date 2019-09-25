@@ -18,7 +18,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.ayst.stresstest.test.WifiTestFragment">
+    tools:context="com.ayst.stresstest.test.NetworkTestFragment">
 
     <LinearLayout
         android:orientation="vertical"
@@ -29,99 +29,59 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/black_70"
-            android:text="@string/sleep_test_intro" />
+            android:text="@string/network_test_intro" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
+            android:layout_marginStart="10dp"
             android:focusable="true"
             android:focusableInTouchMode="true">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/sleep_test_wakeup_duration"
+                android:text="@string/network_test_url"
                 android:textColor="@color/black"/>
 
             <EditText
-                android:id="@+id/edt_wakeup_time"
+                android:id="@+id/edt_url"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:minWidth="50dp"
+                android:padding="5dp"
                 android:gravity="center"
-                android:inputType="number"
+                android:inputType="textUri"
                 android:maxLines="1"
-                android:text="5"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/sec"
-                android:textColor="@color/black"/>
+                android:text="www.baidu.com"/>
 
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
+            android:layout_marginStart="10dp"
             android:focusable="true"
             android:focusableInTouchMode="true">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/sleep_test_sleep_duration"
+                android:text="@string/network_test_retry_count"
                 android:textColor="@color/black"/>
 
             <EditText
-                android:id="@+id/edt_sleep_time"
+                android:id="@+id/edt_retry_count"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:minWidth="50dp"
+                android:padding="5dp"
                 android:gravity="center"
                 android:inputType="number"
                 android:maxLines="1"
-                android:text="5"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/sec"
-                android:textColor="@color/black"/>
+                android:text="3"/>
 
         </LinearLayout>
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/container_time"
-        android:visibility="gone"
-        android:orientation="vertical"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/black_30"
-        android:gravity="center">
-
-        <TextView
-            android:id="@+id/tv_sleep_time"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="12:30:59"
-            android:textColor="@color/black"
-            android:textSize="40sp"
-            android:textStyle="bold"/>
-
-        <TextView
-            android:id="@+id/tv_wakeup_time"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="12:35:59"
-            android:textColor="@color/black"
-            android:textSize="40sp"
-            android:textStyle="bold"/>
 
     </LinearLayout>
 

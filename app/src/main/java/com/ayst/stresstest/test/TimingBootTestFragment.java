@@ -1,5 +1,5 @@
 /*
- * Copyright(c) 2019 Habo Shen <ayst.shen@foxmail.com>
+ * Copyright(c) 2019 Bob Shen <ayst.shen@foxmail.com>
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -122,14 +122,10 @@ public class TimingBootTestFragment extends BaseTestFragment {
             Log.d(TAG, "check, diffTime=" + diffTime);
             if (Math.abs(diffTime) > TIME_DEVIATION) {
                 Log.d(TAG, "check, Timing boot test failed!");
-                mResult = RESULT_FAIL;
-                stop();
-                return;
+                incFailureCount();
             }
 
             if (mMaxTestCount != 0 && mMaxTestCount <= mCurrentCount) {
-                Log.d(TAG, "check, Timing boot test finish!");
-                mResult = RESULT_SUCCESS;
                 stop();
             } else {
                 mCountDownTime = mShutdownDelayTime; // DELAY_TIME/1000;
@@ -220,7 +216,7 @@ public class TimingBootTestFragment extends BaseTestFragment {
 
     private void powerOff() {
         // save state
-        IncCurrentCount();
+        incCurrentCount();
         saveState();
         setUptime(mStartupDelayTime);
 
